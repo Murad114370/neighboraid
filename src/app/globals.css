@@ -128,3 +128,61 @@
     @apply font-sans;
   }
 }
+
+@property --num-volunteers {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --num-projects {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --num-lives {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --num-impact {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@keyframes count-volunteers {
+  to { --num-volunteers: 3200; }
+}
+@keyframes count-projects {
+  to { --num-projects: 450; }
+}
+@keyframes count-lives {
+  to { --num-lives: 50000; }
+}
+@keyframes count-impact {
+  to { --num-impact: 100; }
+}
+
+.animate-count-volunteers {
+  animation: count-volunteers 2s ease-out forwards;
+  counter-reset: count var(--num-volunteers);
+}
+.animate-count-projects {
+  animation: count-projects 2s ease-out forwards;
+  counter-reset: count var(--num-projects);
+}
+.animate-count-lives {
+  animation: count-lives 2.2s ease-out forwards;
+  counter-reset: count var(--num-lives);
+}
+.animate-count-impact {
+  animation: count-impact 1.8s ease-out forwards;
+  counter-reset: count var(--num-impact);
+}
+
+.animate-count-volunteers::before,
+.animate-count-projects::before,
+.animate-count-lives::before,
+.animate-count-impact::before {
+  content: counter(count);
+}
