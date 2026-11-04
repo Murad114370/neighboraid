@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/navbar";
 import HeroBanner from "@/components/HeroBanner";
 
 const OpenSans = Open_Sans({
