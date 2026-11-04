@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "../components/navbar";
 import HeroBanner from "@/components/HeroBanner";
+import FeaturesSection from "@/components/FeaturesSection";
 
 const OpenSans = Open_Sans({
   subsets: ["latin"],
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <Navbar></Navbar>
           <HeroBanner></HeroBanner>
+          <FeaturesSection></FeaturesSection>
         </ThemeProvider>
       </body>
     </html>
