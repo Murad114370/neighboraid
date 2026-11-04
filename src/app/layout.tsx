@@ -5,6 +5,8 @@ import "./globals.css";
 import Navbar from "../components/navbar";
 import HeroBanner from "@/components/HeroBanner";
 import FeaturesSection from "@/components/FeaturesSection";
+import GallerySection from "@/components/GallerySection";
+import NewsletterSection from "@/components/NewsletterSection";
 
 const OpenSans = Open_Sans({
   subsets: ["latin"],
@@ -30,6 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Navbar></Navbar>
           <HeroBanner></HeroBanner>
           <FeaturesSection></FeaturesSection>
+          <GallerySection></GallerySection>
+          <NewsletterSection></NewsletterSection>
         </ThemeProvider>
       </body>
     </html>
