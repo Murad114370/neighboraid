@@ -3,7 +3,8 @@ import { Open_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "../components/navbar";
-import Footer from "@/components/Footer"
+import Footer from "@/components/Footer";
+import { Suspense } from 'react';
 
 const OpenSans = Open_Sans({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           
+          <Suspense fallback={<div className="h-16 bg-slate-900" />}>
           <Navbar />
+        </Suspense>
 
           {children}
 
