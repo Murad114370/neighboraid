@@ -23,7 +23,8 @@ export default function UpcomingEventsPage() {
   const categories = ['All', 'Donation', 'Cleanup', 'Plantation', 'Winter Relief', 'Food Drive', 'Health Camp', 'Education'];
 
   useEffect(() => {
-    fetch('http://localhost:8000/events')
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    fetch(`${API_URL}/events`)
       .then((res) => res.json())
       .then((data) => {
         setEvents(Array.isArray(data) ? data : []);
@@ -35,7 +36,7 @@ export default function UpcomingEventsPage() {
       });
   }, []);
 
-  // Helper function to format date nicely: e.g., "Wed, Nov 18, 2026"
+  // Format date nicely: e.g., "Sat, Nov 7, 2026"
   const formatEventDate = (dateString: string) => {
     if (!dateString) return '';
     const dateObj = new Date(dateString);
@@ -47,7 +48,6 @@ export default function UpcomingEventsPage() {
     });
   };
 
-  // Filter events by date, category, and search keyword safely inside callback
   const filteredEvents = events.filter((event) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -71,7 +71,7 @@ export default function UpcomingEventsPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-6 py-10">
         
-        {/* Header Title Section */}
+        {/* Header Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Chattogram Community Events
@@ -81,10 +81,8 @@ export default function UpcomingEventsPage() {
           </p>
         </div>
 
-        {/* Top Control Bar: Categories on Left, Search Box on Right */}
+        {/* Categories & Search */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-          
-          {/* Category Filters */}
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {categories.map((cat) => (
               <button
@@ -101,19 +99,15 @@ export default function UpcomingEventsPage() {
             ))}
           </div>
 
-          {/* Right-Side Search Input */}
           <div className="w-full md:w-80">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search events, locations, or hosts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2.5 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400 transition-all shadow-sm"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Search events, locations, or hosts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2.5 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400 transition-all shadow-sm"
+            />
           </div>
-
         </div>
 
         {/* Events Grid */}
@@ -133,7 +127,7 @@ export default function UpcomingEventsPage() {
                 className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-sky-500/30 dark:hover:border-sky-500/30 overflow-hidden flex flex-col justify-between transition-all duration-300 group"
               >
                 <div>
-                  {/* Card Image Banner */}
+                  {/* Card Image Banner Container */}
                   <div className="relative overflow-hidden h-48 bg-slate-100 dark:bg-slate-800">
                     {event.image ? (
                       <img 
@@ -146,35 +140,39 @@ export default function UpcomingEventsPage() {
                         No Banner Available
                       </div>
                     )}
+
+                    {/* Top-Left Category Badge */}
                     <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md text-sky-600 dark:text-sky-400 text-[11px] font-bold rounded-lg shadow-sm border border-slate-100 dark:border-slate-800">
-                        {event.category}
+                      <span className="px-3 py-1 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md text-emerald-600 dark:text-emerald-400 text-[11px] font-bold rounded-lg shadow-sm border border-slate-100 dark:border-slate-800">
+                        🏷️ {event.category}
+                      </span>
+                    </div>
+
+                    {/* Bottom-Left Date Pill Overlay */}
+                    <div className="absolute bottom-3 left-3">
+                      <span className="px-3 py-1.5 bg-black/75 backdrop-blur-md text-white text-[11px] font-medium rounded-lg shadow-md border border-white/10 flex items-center gap-1.5">
+                        📅 {formatEventDate(event.date)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Card Body */}
+                  {/* Card Content Body */}
                   <div className="p-5">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                       {event.title}
                     </h3>
 
-                    {/* Metadata Sub-bar */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                      <span className="line-clamp-1">{event.location}</span>
-                      <span>•</span>
-                      <span className="text-slate-700 dark:text-slate-300 font-semibold shrink-0">
-                        {formatEventDate(event.date)}
-                      </span>
-                    </div>
+                    {/* Location line */}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
+                      📍 {event.location}
+                    </p>
 
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-3 line-clamp-2 leading-relaxed">
                       {event.description}
                     </p>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-                      <span>Organized by</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">{event.organization}</span>
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      👤 <span>{event.organization}</span>
                     </div>
                   </div>
                 </div>
