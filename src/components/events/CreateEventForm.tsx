@@ -1,7 +1,10 @@
+
+
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import {
   Sparkles,
   Type,
@@ -9,7 +12,6 @@ import {
   Calendar,
   MapPin,
   Image as ImageIcon,
-  AlertCircle,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,9 +60,7 @@ export default function CreateEventForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [today, setToday] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
-  // Temporary mock email until authentication is added later
   const mockOrganizerEmail = "mypit@mailinator.com";
 
   const [formData, setFormData] = useState({
@@ -72,7 +72,6 @@ export default function CreateEventForm() {
     description: "",
   });
 
-  // Compute today's date only on the client after mount
   useEffect(() => {
     setToday(new Date().toISOString().split("T")[0]);
   }, []);
@@ -87,7 +86,6 @@ export default function CreateEventForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorMessage("");
 
     try {
       const newEventPayload = {
@@ -109,26 +107,29 @@ export default function CreateEventForm() {
       if (!res.ok) {
         if (contentType && contentType.includes("application/json")) {
           const errData = await res.json();
-          throw new Error(
-            errData.detail || errData.message || "Failed to publish event."
-          );
+          throw new Error(errData.detail || errData.message || "Failed to publish event.");
         } else {
           const errText = await res.text();
-          throw new Error(
-            `Server Error (${res.status}): Check your backend terminal logs. (${errText.slice(0, 80)}...)`
-          );
+          throw new Error(`Server Error (${res.status}): ${errText.slice(0, 80)}`);
         }
       }
 
       const data = await res.json();
       console.log("Event Created Successfully:", data);
 
-      router.push("/events");
+      // Trigger success toast notification
+      toast.success("🎉 Event published successfully!");
+
+      // Redirect after a short delay so the user sees the toast
+      setTimeout(() => {
+        router.push("/events");
+      }, 800);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred.";
+      const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       console.error("Submission error:", message);
-      setErrorMessage(message);
+      
+      // Trigger error toast notification
+      toast.error(`❌ ${message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +138,6 @@ export default function CreateEventForm() {
   return (
     <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-sm dark:shadow-xl dark:shadow-slate-950/50 rounded-2xl transition-colors">
       <CardContent className="p-6 sm:p-10">
-        {/* Header Badge & Title */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-500/10 border border-sky-200/60 dark:border-sky-500/20 text-xs font-semibold text-sky-600 dark:text-sky-400 mb-3">
             <Sparkles className="h-3.5 w-3.5" />
@@ -147,27 +147,13 @@ export default function CreateEventForm() {
             Create a Community Event
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-            Organize a local relief effort, environmental cleanup, or community
-            support drive.
+            Organize a local relief effort, environmental cleanup, or community support drive.
           </p>
         </div>
 
-        {/* Error Alert */}
-        {errorMessage && (
-          <div className="mb-6 flex items-start gap-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 p-4 text-xs text-red-700 dark:text-red-300">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Event Title */}
           <div className="space-y-2">
-            <Label
-              htmlFor="title"
-              className="text-xs font-semibold text-slate-700 dark:text-slate-300"
-            >
+            <Label htmlFor="title" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Event Title <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
@@ -184,9 +170,7 @@ export default function CreateEventForm() {
             </div>
           </div>
 
-          {/* Event Type & Event Date (2 Columns) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Event Type */}
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Event Type <span className="text-red-500">*</span>
@@ -217,12 +201,8 @@ export default function CreateEventForm() {
               </Select>
             </div>
 
-            {/* Event Date */}
             <div className="space-y-2">
-              <Label
-                htmlFor="date"
-                className="text-xs font-semibold text-slate-700 dark:text-slate-300"
-              >
+              <Label htmlFor="date" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Event Date <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
@@ -238,18 +218,11 @@ export default function CreateEventForm() {
                   className="pl-10 h-11 bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus-visible:ring-sky-500 dark:focus-visible:ring-sky-400 dark:[color-scheme:dark]"
                 />
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                Dates must be in the future (today or later)
-              </p>
             </div>
           </div>
 
-          {/* Location / Venue */}
           <div className="space-y-2">
-            <Label
-              htmlFor="location"
-              className="text-xs font-semibold text-slate-700 dark:text-slate-300"
-            >
+            <Label htmlFor="location" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Location / Venue <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
@@ -266,12 +239,8 @@ export default function CreateEventForm() {
             </div>
           </div>
 
-          {/* Thumbnail Image URL + Quick Presets */}
           <div className="space-y-2">
-            <Label
-              htmlFor="thumbnailUrl"
-              className="text-xs font-semibold text-slate-700 dark:text-slate-300"
-            >
+            <Label htmlFor="thumbnailUrl" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Thumbnail Image URL <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
@@ -288,7 +257,6 @@ export default function CreateEventForm() {
               />
             </div>
 
-            {/* Quick Photo Presets */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-[11px] text-slate-400 dark:text-slate-500">
               <span>Quick photo presets:</span>
               {PHOTO_PRESETS.map((preset, index) => (
@@ -311,12 +279,8 @@ export default function CreateEventForm() {
             </div>
           </div>
 
-          {/* Event Description */}
           <div className="space-y-2">
-            <Label
-              htmlFor="description"
-              className="text-xs font-semibold text-slate-700 dark:text-slate-300"
-            >
+            <Label htmlFor="description" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Event Description <span className="text-red-500">*</span>
             </Label>
             <Textarea
@@ -326,22 +290,16 @@ export default function CreateEventForm() {
               rows={4}
               value={formData.description}
               onChange={handleChange}
-              placeholder="Explain the purpose of the drive, volunteers required, items being distributed or tasks to complete..."
+              placeholder="Explain the purpose of the drive..."
               className="bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:ring-sky-500 dark:focus-visible:ring-sky-400 resize-none"
             />
           </div>
 
-          {/* Organizer Email Attached Banner */}
           <div className="flex items-center justify-between rounded-xl bg-sky-50/60 dark:bg-sky-950/30 px-4 py-3 text-xs border border-sky-200/70 dark:border-sky-800/40">
-            <span className="text-slate-600 dark:text-slate-400">
-              Organizer Email attached:
-            </span>
-            <span className="font-semibold text-sky-700 dark:text-sky-300">
-              {mockOrganizerEmail}
-            </span>
+            <span className="text-slate-600 dark:text-slate-400">Organizer Email attached:</span>
+            <span className="font-semibold text-sky-700 dark:text-sky-300">{mockOrganizerEmail}</span>
           </div>
 
-          {/* Publish Event Submit Button */}
           <Button
             type="submit"
             disabled={isSubmitting}
@@ -354,3 +312,4 @@ export default function CreateEventForm() {
     </Card>
   );
 }
+
