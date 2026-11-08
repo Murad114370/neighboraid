@@ -127,7 +127,7 @@ export default function CreateEventForm() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       console.error("Submission error:", message);
-      
+
       // Trigger error toast notification
       toast.error(`❌ ${message}`);
     } finally {
@@ -177,9 +177,11 @@ export default function CreateEventForm() {
               </Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, type: value }))
-                }
+                onValueChange={(value) => {
+                  if (value) {
+                    setFormData((prev) => ({ ...prev, type: value }));
+                  }
+                }}
               >
                 <SelectTrigger className="h-11 bg-slate-50/70 dark:bg-slate-950/60 border-sky-500/70 dark:border-sky-500/50 ring-1 ring-sky-500/20 focus:ring-sky-500 text-slate-900 dark:text-slate-100">
                   <div className="flex items-center gap-2.5">
