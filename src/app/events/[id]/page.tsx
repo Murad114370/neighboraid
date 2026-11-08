@@ -1,19 +1,22 @@
-
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 
 interface EventItem {
   _id: string;
   title: string;
   category: string;
+  type?: string;
   date: string;
   location: string;
   description: string;
   organization: string;
+  organizerEmail?: string;
   image?: string;
+  thumbnailUrl?: string;
   joinedCount?: number;
 }
 
@@ -40,7 +43,7 @@ function EventDetailsContent() {
   const router = useRouter();
   const id = params?.id;
 
-  // Better Auth session hook
+  // Session hook
   const { data: session } = useSession();
 
   const [event, setEvent] = useState<EventItem | null>(null);
@@ -50,6 +53,10 @@ function EventDetailsContent() {
   const [volunteerCount, setVolunteerCount] = useState<number>(0);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  // Fallback mock user until full auth is connected
+  const activeUserEmail = session?.user?.email || 'mypit@mailinator.com';
+  const activeUserName = session?.user?.name || 'Volunteer Member';
 
   useEffect(() => {
     if (!id) return;
@@ -70,7 +77,7 @@ function EventDetailsContent() {
   // Helper function to format date: e.g., "Sun, Nov 15, 2026"
   const formatEventDate = (dateString: string) => {
     if (!dateString) return '';
-    const dateObj = new Date(dateString);
+    const dateObj = new Date(dateString + 'T00:00:00');
     return dateObj.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -80,12 +87,6 @@ function EventDetailsContent() {
   };
 
   const handleJoinEvent = async () => {
-    // If not logged in, redirect to login page
-    if (!session?.user) {
-      router.push('/login');
-      return;
-    }
-
     if (isJoined || joining || !event) return;
 
     setJoining(true);
@@ -95,57 +96,100 @@ function EventDetailsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: event._id,
-          eventTitle: event.title,
-          userEmail: session.user.email,
-          userName: session.user.name,
+          userEmail: activeUserEmail,
+          userName: activeUserName,
+          title: event.title,
+          category: event.category || event.type || 'Community',
+          date: event.date,
+          location: event.location,
+          image:
+            event.image ||
+            event.thumbnailUrl ||
+            'https://images.unsplash.com/photo-1593113598332-cd288d649433',
+          description: event.description,
+          organization:
+            event.organization || event.organizerEmail || 'NeighborAid Organizer',
           joinedAt: new Date().toISOString(),
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setIsJoined(true);
         setVolunteerCount((prev) => prev + 1);
+        toast.success('🎉 Successfully joined the event!');
+
+        // Automatically navigate to the Joined Events page
+        setTimeout(() => {
+          router.push('/events/joined');
+        }, 700);
       } else {
-        const errorData = await res.json();
-        if (errorData.message?.includes('already joined')) {
+        if (data.message?.toLowerCase().includes('already joined')) {
           setIsJoined(true);
+          toast.info('ℹ️ You have already joined this event!');
+          setTimeout(() => {
+            router.push('/events/joined');
+          }, 700);
+        } else {
+          throw new Error(data.message || 'Failed to join event.');
         }
       }
-    } catch (err) {
-      console.error('Failed to join event:', err);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to join event.';
+      console.error('Failed to join event:', message);
+      toast.error(`❌ ${message}`);
     } finally {
       setJoining(false);
     }
   };
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-500">Loading event details...</div>;
+    return (
+      <div className="text-center py-20 text-slate-500">
+        Loading event details...
+      </div>
+    );
   }
 
   if (!event) {
     return (
       <div className="text-center py-20 text-slate-500">
         <p>Event not found.</p>
-        <button onClick={() => router.back()} className="mt-4 text-xs text-sky-600 underline">
+        <button
+          onClick={() => router.back()}
+          className="mt-4 text-xs text-sky-600 underline"
+        >
           Go Back
         </button>
       </div>
     );
   }
 
+  const displayCategory = event.category || event.type || 'Community';
+  const displayImage =
+    event.image ||
+    event.thumbnailUrl ||
+    'https://images.unsplash.com/photo-1593113598332-cd288d649433';
+  const displayOrg =
+    event.organization || event.organizerEmail || 'Community Organizer';
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-8 transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 md:px-6">
-        
         {/* Navigation Breadcrumb */}
-        <Link href="/events" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-400 mb-4 transition-colors">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-400 mb-4 transition-colors"
+        >
           &larr; Upcoming Events
         </Link>
 
         {/* Hero Card Banner */}
         <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 dark:border-slate-800 h-[340px] md:h-[400px]">
           <img
-            src={event.image || 'https://images.unsplash.com/photo-1593113598332-cd288d649433'}
+            src={displayImage}
             alt={event.title}
             className="w-full h-full object-cover"
           />
@@ -155,7 +199,7 @@ function EventDetailsContent() {
           {/* Category Badge top left */}
           <div className="absolute top-5 left-6">
             <span className="px-3.5 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full border border-slate-200/50 shadow-sm">
-              ♡ {event.category}
+              ♡ {displayCategory}
             </span>
           </div>
 
@@ -196,7 +240,7 @@ function EventDetailsContent() {
           <button
             onClick={handleJoinEvent}
             disabled={joining || isJoined}
-            className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+            className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer ${
               isJoined
                 ? 'bg-emerald-600 text-white cursor-default'
                 : 'bg-teal-700 hover:bg-teal-800 text-white active:scale-95'
@@ -208,10 +252,8 @@ function EventDetailsContent() {
 
         {/* Details Grid: Left Main Content / Right Organizer Card */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          
           {/* Main Info Column (Left 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* About Section */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
@@ -228,12 +270,20 @@ function EventDetailsContent() {
                 VOLUNTEER GUIDELINES
               </h3>
               <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 list-disc list-inside">
-                <li>Please arrive 15 minutes before the scheduled time at the designated location.</li>
-                <li>Wear comfortable clothing suitable for physical social work and distribution.</li>
-                <li>Bring any pre-coordinated relief packages or distribution items if requested.</li>
+                <li>
+                  Please arrive 15 minutes before the scheduled time at the
+                  designated location.
+                </li>
+                <li>
+                  Wear comfortable clothing suitable for physical social work
+                  and distribution.
+                </li>
+                <li>
+                  Bring any pre-coordinated relief packages or distribution
+                  items if requested.
+                </li>
               </ul>
             </div>
-
           </div>
 
           {/* Right Column: Initiative Organizer Card */}
@@ -242,14 +292,14 @@ function EventDetailsContent() {
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
                 INITIATIVE ORGANIZER
               </h4>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center font-bold text-slate-700 dark:text-slate-200">
-                  {event.organization ? event.organization.charAt(0) : 'O'}
+                  {displayOrg.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <h5 className="text-sm font-bold text-slate-900 dark:text-white">
-                    {event.organization}
+                    {displayOrg}
                   </h5>
                   <p className="text-[11px] text-slate-400 dark:text-slate-500">
                     organizer@neighboraid.org
@@ -262,9 +312,7 @@ function EventDetailsContent() {
               </div>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );
@@ -272,9 +320,14 @@ function EventDetailsContent() {
 
 export default function EventDetailsPage() {
   return (
-    <Suspense fallback={<div className="text-center py-20 text-slate-500">Loading details...</div>}>
+    <Suspense
+      fallback={
+        <div className="text-center py-20 text-slate-500">
+          Loading details...
+        </div>
+      }
+    >
       <EventDetailsContent />
     </Suspense>
   );
 }
-
