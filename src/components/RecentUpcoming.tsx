@@ -4,15 +4,25 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Calendar, MapPin, User } from "lucide-react";
 
+interface EventItem {
+    _id: string;
+    title: string;
+    type: string;
+    date: string;
+    location: string;
+    thumbnailUrl: string;
+    description: string;
+    organizerEmail: string;
+}
+
 const RecentUpcoming = () => {
-    const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [events, setEvents] = useState<EventItem[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        // Fetch upcoming events from your backend
         fetch("http://localhost:8000/upcoming-events")
             .then((res) => res.json())
-            .then((data) => {
+            .then((data: EventItem[]) => {
                 setEvents(data);
                 setLoading(false);
             })
@@ -46,7 +56,6 @@ const RecentUpcoming = () => {
                     No upcoming events scheduled right now. Create one to see it appear here!
                 </p>
             ) : (
-                /* 3-Column Grid Layout matching your screenshot */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {events.map((event) => (
                         <div 
