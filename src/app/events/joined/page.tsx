@@ -90,7 +90,7 @@ const JoinedEventPage = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Page Header */}
         <div className="border-b border-slate-200 dark:border-slate-800 pb-6">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-sky-500s border border-sky-200 dark:border-sky-500 text-xs font-semibold text-sky-600 dark:text-sky-400 mb-3">
             <span>My Volunteer Coordinations</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
