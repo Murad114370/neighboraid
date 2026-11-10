@@ -69,7 +69,7 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-sky-100 dark:from-slate-950 dark:via-slate-900 dark:to-sky-950/40 px-4 py-12">
       <div className="w-full max-w-md flex flex-col gap-6">
         <Card className="border-sky-200/80 dark:border-sky-800/50 shadow-xl shadow-sky-500/10 backdrop-blur-sm bg-white/95 dark:bg-slate-900/90">
-          <CardHeader className="text-center space-y-2 pb-4">
+          <CardHeader className="text-center space-y-2 pb-5">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-400 shadow-inner">
               <HandHeart className="h-6 w-6" />
             </div>
