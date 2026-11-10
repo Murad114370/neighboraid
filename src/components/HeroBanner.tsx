@@ -167,7 +167,7 @@ export default function HeroBanner() {
               </Button>
 
               <Button
-                render={<Link href="/create-event" />}
+                render={<Link href="/events/create" />}
                 nativeButton={false}
                 variant="outline"
                 size="lg"
