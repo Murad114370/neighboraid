@@ -20,9 +20,10 @@ interface EventItem {
   joinedCount?: number;
 }
 
-// --- Temporary Session Helper ---
+// --- Session Helper using localStorage ---
 function useSession() {
   const [user, setUser] = useState<{ email: string; name: string } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -33,9 +34,10 @@ function useSession() {
         setUser(null);
       }
     }
+    setLoading(false);
   }, []);
 
-  return { data: user ? { user } : null };
+  return { data: user ? { user } : null, loading };
 }
 
 function EventDetailsContent() {
@@ -44,7 +46,7 @@ function EventDetailsContent() {
   const id = params?.id;
 
   // Session hook
-  const { data: session } = useSession();
+  const { data: session, loading: sessionLoading } = useSession();
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,10 +55,6 @@ function EventDetailsContent() {
   const [volunteerCount, setVolunteerCount] = useState<number>(0);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-  // Fallback mock user until full auth is connected
-  const activeUserEmail = session?.user?.email || 'mypit@mailinator.com';
-  const activeUserName = session?.user?.name || 'Volunteer Member';
 
   useEffect(() => {
     if (!id) return;
@@ -87,6 +85,14 @@ function EventDetailsContent() {
   };
 
   const handleJoinEvent = async () => {
+    // 1. Check if user is logged in via session
+    if (!session?.user) {
+      toast.warn('🔒 Please log in first to join this event.');
+      // Optional: Save current URL so user can be redirected back after login
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
     if (isJoined || joining || !event) return;
 
     setJoining(true);
@@ -96,8 +102,8 @@ function EventDetailsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: event._id,
-          userEmail: activeUserEmail,
-          userName: activeUserName,
+          userEmail: session.user.email,
+          userName: session.user.name || 'Volunteer Member',
           title: event.title,
           category: event.category || event.type || 'Community',
           date: event.date,
@@ -145,7 +151,7 @@ function EventDetailsContent() {
     }
   };
 
-  if (loading) {
+  if (loading || sessionLoading) {
     return (
       <div className="text-center py-20 text-slate-500">
         Loading event details...
