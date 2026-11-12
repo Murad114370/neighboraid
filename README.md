@@ -10,7 +10,7 @@ A full-stack community service and event-management web platform designed to bri
 
 * **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, Lucide React, React Toastify
 * **Backend**: Node.js, Express.js (REST API architecture handling server-side logic and routing)
-* **Database & ODM**: MongoDB Atlas, MongoDB Node.js Driver (Custom CRUD operations for event creation, reading, updating, and deletion)
+* **Database**:MongoDB Atlas (NoSQL Document Store)
 * **Authentication**: Better Auth (Secure Session Management, Google OAuth, Email/Password)
 * **Deployment & Hosting**: Vercel
 
