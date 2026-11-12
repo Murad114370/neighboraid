@@ -9,8 +9,9 @@ A full-stack community service and event-management web platform designed to bri
 ## 🛠️ Technology Stack
 
 * **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, Lucide React, React Toastify
+* **Backend**: Node.js, Express.js (REST API architecture handling server-side logic and routing)
+* **Database & ODM**: MongoDB Atlas, MongoDB Node.js Driver (Custom CRUD operations for event creation, reading, updating, and deletion)
 * **Authentication**: Better Auth (Secure Session Management, Google OAuth, Email/Password)
-* **Backend & Database**: Node.js, MongoDB Atlas (NoSQL Document Store)
 * **Deployment & Hosting**: Vercel
 
 ---
@@ -20,11 +21,12 @@ Local community volunteering and charity drives often suffer from fragmentation,
 
 ## 🎯 Whose Problem Does It Solve?
 * **For Volunteers & Community Members**: Provides a centralized, easy-to-browse hub to discover, track, and join impactful local social work.
-* **For Event Organizers & NGOs**: Empowers hosts to seamlessly launch, promote, and oversee community drives with built-in participant management.
+* **For Event Organizers & NGOs**: Empowers hosts to seamlessly launch, promote, and oversee community drives with built-in participant management via custom REST endpoints.
 
 ---
 
 ## ✨ Unique Features & Data Structure
+* **RESTful CRUD Operations**: Built robust Express.js backend endpoints executing full Create, Read, Update, and Delete operations for community events and user activity data stored in MongoDB.
 * **Localized Event Curation**: Dynamic filtering and categorization of community drives (Donation, Cleanup, Plantation, Winter Relief, Food Drive, Health Camp, Education) tailored for regional social impact across Chattogram.
 * **Granular User Dashboards**: Personalized tracking allowing users to monitor events they have created (`/events/create`, `/events/manage`) and community drives they have committed to (`/events/joined`).
 * **Secure Authentication & Session State**: Advanced OAuth and credential management via Better Auth ensuring secure role-based navigation and real-time session feedback.
