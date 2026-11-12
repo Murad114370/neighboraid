@@ -6,6 +6,13 @@ A full-stack community service and event-management web platform designed to bri
 
 ---
 
+
+## 📸 Application Preview
+
+![NeighborAid Home Page Preview](./public/neighboraid-preview.png)
+
+---
+
 ## 🛠️ Technology Stack
 
 * **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS,shadcn/ui Component Library, Lucide React, React Toastify
