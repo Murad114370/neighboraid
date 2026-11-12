@@ -1,7 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import {
   ArrowRight,
   CalendarPlus,
@@ -104,15 +107,38 @@ function StatCard({
 }
 
 export default function HeroBanner() {
+  const router = useRouter();
+
+  // Handle protected routing check when clicking "Create an Event"
+  const handleCreateEventClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    let user = null;
+    try {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        user = JSON.parse(savedUser);
+      }
+    } catch (err) {
+      user = null;
+    }
+
+    if (!user) {
+      toast.warn("🔒 Please log in first to create an event.");
+      router.push(`/login?redirect=${encodeURIComponent("/events/create")}`);
+      return;
+    }
+
+    // If logged in, proceed to the create event page
+    router.push("/events/create");
+  };
+
   return (
     <section
       aria-label="Community platform introduction"
       className="relative overflow-hidden border-b border-sky-200/60 py-16 sm:py-24 lg:py-28 dark:border-sky-900/50"
     >
-      {/* 
-        Background Community Image Container
-        Optimized with clearer opacities (30% light mode, 25% dark mode) 
-      */}
+      {/* Background Community Image Container */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 dark:opacity-60 pointer-events-none transition-opacity duration-300"
         style={{ 
@@ -120,7 +146,7 @@ export default function HeroBanner() {
         }}
       />
 
-      {/* Translucent Glass Gradient Overlay for Both Themes (Keeps text sharp & visible) */}
+      {/* Translucent Glass Gradient Overlay for Both Themes */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-50/85 via-white/80 to-sky-50/80 dark:from-slate-950/90 dark:via-slate-900/85 dark:to-slate-950/90 pointer-events-none" />
 
       {/* Ambient Glow Accent */}
@@ -167,11 +193,10 @@ export default function HeroBanner() {
               </Button>
 
               <Button
-                render={<Link href="/events/create" />}
-                nativeButton={false}
+                onClick={handleCreateEventClick}
                 variant="outline"
                 size="lg"
-                className="h-12 rounded-xl border-sky-200 bg-white/60 text-slate-800 backdrop-blur-sm transition-all duration-200 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900/60 dark:text-sky-200 dark:hover:bg-sky-950/50"
+                className="h-12 rounded-xl border-sky-200 bg-white/60 text-slate-800 backdrop-blur-sm transition-all duration-200 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900/60 dark:text-sky-200 dark:hover:bg-sky-950/50 cursor-pointer"
               >
                 <CalendarPlus className="mr-2 size-4 text-sky-500" />
                 Create an Event
@@ -201,3 +226,4 @@ export default function HeroBanner() {
     </section>
   );
 }
+

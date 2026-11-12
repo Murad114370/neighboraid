@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
+import { authClient } from '@/lib/auth-client';
 
 interface EventItem {
   _id: string;
@@ -20,33 +21,13 @@ interface EventItem {
   joinedCount?: number;
 }
 
-// --- Session Helper using localStorage ---
-function useSession() {
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        setUser(null);
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  return { data: user ? { user } : null, loading };
-}
-
 function EventDetailsContent() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id;
 
-  // Session hook
-  const { data: session, loading: sessionLoading } = useSession();
+  // Same session source as the Navbar (Better Auth)
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -72,7 +53,6 @@ function EventDetailsContent() {
       });
   }, [id, API_URL]);
 
-  // Helper function to format date: e.g., "Sun, Nov 15, 2026"
   const formatEventDate = (dateString: string) => {
     if (!dateString) return '';
     const dateObj = new Date(dateString + 'T00:00:00');
@@ -85,10 +65,11 @@ function EventDetailsContent() {
   };
 
   const handleJoinEvent = async () => {
-    // 1. Check if user is logged in via session
-    if (!session?.user) {
+    const currentUser = session?.user;
+
+    // Not logged in: go to login and come back to this page afterwards
+    if (!currentUser?.email) {
       toast.warn('🔒 Please log in first to join this event.');
-      // Optional: Save current URL so user can be redirected back after login
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
@@ -99,11 +80,12 @@ function EventDetailsContent() {
     try {
       const res = await fetch(`${API_URL}/joined-events`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: event._id,
-          userEmail: session.user.email,
-          userName: session.user.name || 'Volunteer Member',
+          userEmail: currentUser.email,
+          userName: currentUser.name || 'Volunteer Member',
           title: event.title,
           category: event.category || event.type || 'Community',
           date: event.date,
@@ -126,7 +108,6 @@ function EventDetailsContent() {
         setVolunteerCount((prev) => prev + 1);
         toast.success('🎉 Successfully joined the event!');
 
-        // Automatically navigate to the Joined Events page
         setTimeout(() => {
           router.push('/events/joined');
         }, 700);
@@ -165,7 +146,7 @@ function EventDetailsContent() {
         <p>Event not found.</p>
         <button
           onClick={() => router.back()}
-          className="mt-4 text-xs text-sky-600 underline"
+          className="mt-4 text-xs text-sky-600 underline cursor-pointer"
         >
           Go Back
         </button>
@@ -184,7 +165,6 @@ function EventDetailsContent() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-8 transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 md:px-6">
-        {/* Navigation Breadcrumb */}
         <Link
           href="/events"
           className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-400 mb-4 transition-colors"
@@ -192,24 +172,20 @@ function EventDetailsContent() {
           &larr; Upcoming Events
         </Link>
 
-        {/* Hero Card Banner */}
         <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 dark:border-slate-800 h-[340px] md:h-[400px]">
           <img
             src={displayImage}
             alt={event.title}
             className="w-full h-full object-cover"
           />
-          {/* Gradient Overlay for text clarity */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
-          {/* Category Badge top left */}
           <div className="absolute top-5 left-6">
-            <span className="px-3.5 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full border border-slate-200/50 shadow-sm">
+            <span className="px-3.5 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-sky-700 dark:text-sky-400 text-xs font-semibold rounded-full border border-slate-200/50 shadow-sm">
               ♡ {displayCategory}
             </span>
           </div>
 
-          {/* Hero Banner Title & Info */}
           <div className="absolute bottom-6 left-6 right-6 text-white">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-md">
               {event.title}
@@ -226,7 +202,6 @@ function EventDetailsContent() {
           </div>
         </div>
 
-        {/* Action & Volunteer Bar */}
         <div className="mt-6 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
@@ -242,25 +217,21 @@ function EventDetailsContent() {
             </div>
           </div>
 
-          {/* Right Side Join Event Button */}
           <button
             onClick={handleJoinEvent}
             disabled={joining || isJoined}
             className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer ${
               isJoined
-                ? 'bg-emerald-600 text-white cursor-default'
-                : 'bg-teal-700 hover:bg-teal-800 text-white active:scale-95'
+                ? 'bg-sky-600 text-white cursor-default'
+                : 'bg-sky-700 hover:bg-sky-800 text-white active:scale-95'
             }`}
           >
             ♡ {isJoined ? 'Joined Event' : joining ? 'Joining...' : 'Join Event'}
           </button>
         </div>
 
-        {/* Details Grid: Left Main Content / Right Organizer Card */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* Main Info Column (Left 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* About Section */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
                 About this Social Initiative
@@ -270,29 +241,18 @@ function EventDetailsContent() {
               </p>
             </div>
 
-            {/* Volunteer Guidelines */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
                 VOLUNTEER GUIDELINES
               </h3>
               <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 list-disc list-inside">
-                <li>
-                  Please arrive 15 minutes before the scheduled time at the
-                  designated location.
-                </li>
-                <li>
-                  Wear comfortable clothing suitable for physical social work
-                  and distribution.
-                </li>
-                <li>
-                  Bring any pre-coordinated relief packages or distribution
-                  items if requested.
-                </li>
+                <li>Please arrive 15 minutes before the scheduled time at the designated location.</li>
+                <li>Wear comfortable clothing suitable for physical social work and distribution.</li>
+                <li>Bring any pre-coordinated relief packages or distribution items if requested.</li>
               </ul>
             </div>
           </div>
 
-          {/* Right Column: Initiative Organizer Card */}
           <div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">

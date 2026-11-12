@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
 interface JoinedEvent {
   _id: string;
@@ -25,43 +26,44 @@ const JoinedEventPage = () => {
   const [joinedEvents, setJoinedEvents] = useState<JoinedEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Same session source as the Navbar (Better Auth)
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const userEmail = session?.user?.email;
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const mockUserEmail = "mypit@mailinator.com";
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    let emailToFetch = mockUserEmail;
+    // Wait until Better Auth finishes checking the session
+    if (sessionLoading) return;
 
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        if (parsed?.email) {
-          emailToFetch = parsed.email;
-        }
-      } catch {
-        // Fallback to mockUserEmail
-      }
-    }
-
-    fetchJoinedEvents(emailToFetch);
-  }, []);
-
-  const fetchJoinedEvents = async (email: string) => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`${API_URL}/joined-events/${email}`);
-      if (!res.ok) throw new Error("Failed to fetch joined events.");
-
-      const data = await res.json();
-      setJoinedEvents(data);
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Error loading joined events.";
-      toast.error(`❌ ${message}`);
-    } finally {
+    // Not logged in: nothing to fetch
+    if (!userEmail) {
       setIsLoading(false);
+      return;
     }
-  };
+
+    const fetchJoinedEvents = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `${API_URL}/joined-events/${encodeURIComponent(userEmail)}`,
+          { credentials: "include" }
+        );
+        if (!res.ok) throw new Error("Failed to fetch joined events.");
+
+        const data = await res.json();
+        setJoinedEvents(data);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Error loading joined events.";
+        toast.error(`❌ ${message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJoinedEvents();
+  }, [sessionLoading, userEmail, API_URL]);
 
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return "";
@@ -90,7 +92,7 @@ const JoinedEventPage = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Page Header */}
         <div className="border-b border-slate-200 dark:border-slate-800 pb-6">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-sky-500s border border-sky-200 dark:border-sky-500 text-xs font-semibold text-sky-600 dark:text-sky-400 mb-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-500s border border-sky-200 dark:border-sky-500 text-xs font-bold text-sky-600 dark:text-sky-400 mb-3">
             <span>My Volunteer Coordinations</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
@@ -101,11 +103,28 @@ const JoinedEventPage = () => {
           </p>
         </div>
 
-        {/* Loading / Empty / Cards Grid */}
-        {isLoading ? (
+        {/* Loading / Not logged in / Empty / Cards Grid */}
+        {isLoading || sessionLoading ? (
           <div className="text-center py-20 text-sm text-slate-500 dark:text-slate-400">
             Loading your joined events...
           </div>
+        ) : !userEmail ? (
+          <Card className="border-dashed border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/50 rounded-2xl p-12 text-center">
+            <CardContent className="space-y-4">
+              <AlertCircle className="mx-auto h-10 w-10 text-slate-400" />
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                Please log in
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                Log in to see the events you have joined.
+              </p>
+              <Link href="/login?redirect=%2Fevents%2Fjoined">
+                <Button className="mt-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg cursor-pointer">
+                  Go to Login
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         ) : joinedEvents.length === 0 ? (
           <Card className="border-dashed border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/50 rounded-2xl p-12 text-center">
             <CardContent className="space-y-4">
@@ -117,7 +136,7 @@ const JoinedEventPage = () => {
                 Open any event from Upcoming Events and click &ldquo;Join Event&rdquo; to see it appear here.
               </p>
               <Link href="/events">
-                <Button className="mt-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg cursor-pointer">
+                <Button className="mt-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-lg cursor-pointer">
                   Explore Upcoming Events
                 </Button>
               </Link>
@@ -164,13 +183,13 @@ const JoinedEventPage = () => {
 
                       {/* Volunteer Status Box */}
                       <div className="flex items-start gap-2 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/50 p-2.5 rounded-xl text-[11px] text-emerald-800 dark:text-emerald-300">
-                        <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" />
                         <div>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-sky-300">
                             You have signed up as a verified volunteer for this initiative.
                           </p>
                           {event.joinedAt && (
-                            <p className="text-[10px] opacity-80 mt-0.5">
+                            <p className="text-[10px] opacity-80 mt-0.5 text-sky-300">
                               Joined {formatJoinDate(event.joinedAt)}
                             </p>
                           )}

@@ -54,7 +54,7 @@ export default function LoginPage() {
       setTimeout(() => {
         router.push("/")
         router.refresh()
-      }, 1500)
+      }, 1000)
     }
   }
 

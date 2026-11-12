@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NeighborAid
 
-## Getting Started
+A full-stack community service and event-management web platform designed to bridge the gap between volunteers, local organizers, and community support initiatives.
 
-First, run the development server:
+* **Live Site URL**: [https://neighboraid-tau.vercel.app/](https://neighboraid-tau.vercel.app/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Technology Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, Lucide React, React Toastify
+* **Authentication**: Better Auth (Secure Session Management, Google OAuth, Email/Password)
+* **Backend & Database**: Node.js, MongoDB Atlas (NoSQL Document Store)
+* **Deployment & Hosting**: Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 💡 What Problem Does It Solve?
+Local community volunteering and charity drives often suffer from fragmentation, poor visibility, and a lack of centralized coordination. Organizers struggle to broadcast their relief campaigns (such as winter clothing drives, food distributions, and cleanups), while eager volunteers miss opportunities to participate due to decentralized communication channels. 
 
-To learn more about Next.js, take a look at the following resources:
+## 🎯 Whose Problem Does It Solve?
+* **For Volunteers & Community Members**: Provides a centralized, easy-to-browse hub to discover, track, and join impactful local social work.
+* **For Event Organizers & NGOs**: Empowers hosts to seamlessly launch, promote, and oversee community drives with built-in participant management.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ✨ Unique Features & Data Structure
+* **Localized Event Curation**: Dynamic filtering and categorization of community drives (Donation, Cleanup, Plantation, Winter Relief, Food Drive, Health Camp, Education) tailored for regional social impact across Chattogram.
+* **Granular User Dashboards**: Personalized tracking allowing users to monitor events they have created (`/events/create`, `/events/manage`) and community drives they have committed to (`/events/joined`).
+* **Secure Authentication & Session State**: Advanced OAuth and credential management via Better Auth ensuring secure role-based navigation and real-time session feedback.
+* **Responsive UI & Feedback System**: Fully optimized mobile sheet and desktop navigation with dynamic dark/light mode switching and interactive toast notifications for user actions.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧗 Challenges Faced & How They Were Overcome
+* **Authentication Provider & Account Linking Conflicts**: 
+  * *Challenge*: Encountered `account_not_linked` validation errors when testing dual authentication methods (Google OAuth vs. email credentials) sharing overlapping identifiers. 
+  * *Solution*: Implemented strict database schema isolation and session validation rules via Better Auth configuration to ensure seamless account handling and token persistence.
+* **Date-Based Filtering & Event Lifecycle Management**: 
+  * *Challenge*: Ensuring upcoming events dynamically render based on real-time chronological comparison without hiding active ongoing initiatives.
+  * *Solution*: Built robust client-side date utility checks comparing event timestamps against localized date objects to filter active community drives efficiently.
